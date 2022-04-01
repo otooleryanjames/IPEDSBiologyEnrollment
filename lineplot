@@ -10,10 +10,19 @@ summarise(mean(proportion)) %>%
   geom_point(aes(color = gender))
 
 #clean line plot
-gender_line_plot +
+gender_line_plot <-  gender_line_plot +
   theme(panel.background = element_blank(), 
         axis.line = element_line(color = "black"),
         panel.border = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
-             
+
+#add labels
+gender_line_plot <- gender_line_plot +
+  labs(title = "Proportion Male and Female Over Time")+
+  ylab("Year")+
+  xlab("Proportion")
+
+#modify scale
+gender_line_plot <- gender_line_plot +
+  scale_y_continuous(limits = c(0.0,1.0), expand = c(0,0))
