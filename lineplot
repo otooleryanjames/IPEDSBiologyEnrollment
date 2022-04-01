@@ -1,0 +1,19 @@
+#combine all years
+mf_prop_all <- rbind(mf_prop_2020, mf_prop_2018, mf_prop_2016, mf_prop_2014, mf_prop_2012, mf_prop_2010)
+
+#plot proportions by gender over time
+gender_line_plot <- mf_prop_all %>%
+group_by(year, gender) %>%
+summarise(mean(proportion)) %>%
+  ggplot(aes(x = year, y = `mean(proportion)`, group = gender))+
+  geom_line(aes(color = gender))+
+  geom_point(aes(color = gender))
+
+#clean line plot
+gender_line_plot +
+  theme(panel.background = element_blank(), 
+        axis.line = element_line(color = "black"),
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+             
