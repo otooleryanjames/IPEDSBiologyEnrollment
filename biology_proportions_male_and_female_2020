@@ -1,0 +1,57 @@
+#load packages
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(data.table)
+
+#import data
+fall_enrollment <- read_csv("C:/Users/otool/OneDrive - University of Connecticut/Desktop/school_data.csv", col_types = cols(UNITID = col_factor(levels = NULL), CIPCODE = col_factor(levels = NULL)))
+
+#find sum of biology students by school
+total_biology_enrollment <- fall_enrollment %>%
+  select(UNITID, CIPCODE, EFTOTLT) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Total = sum(EFTOTLT))
+
+#find sum of male biology students by school
+total_male_biology_enrollment <- fall_enrollment %>%
+  select(UNITID, CIPCODE, EFTOTLM) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Men = sum(EFTOTLM))
+
+#find sum of female biology students by school
+total_female_biology_enrollment <- fall_enrollment %>%
+  select(UNITID, CIPCODE, EFTOTLW) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Women = sum(EFTOTLW))
+
+#combine into single table
+total_male_biology_enrollment <- left_join(BY = UNITID, total_biology_enrollment, total_male_biology_enrollment)
+total_female_biology_enrollment <- left_join(BY = UNITID, total_biology_enrollment, total_female_biology_enrollment)
+
+#add gender column
+total_male_biology_enrollment$gender <- "male"
+total_female_biology_enrollment$gender <- "female"
+
+#rename columns
+total_male_biology_enrollment <- total_male_biology_enrollment %>%
+  rename(gender_enroll = Men)
+total_female_biology_enrollment <- total_female_biology_enrollment %>%
+  rename(gender_enroll = Women)
+
+#create proportion columns
+total_male_biology_enrollment <- total_male_biology_enrollment %>%
+  mutate(proportion = gender_enroll/Total)
+total_female_biology_enrollment <- total_female_biology_enrollment %>%
+  mutate(proportion = gender_enroll/Total)
+
+#add columns for year
+total_male_biology_enrollment$year = "2020"
+total_female_biology_enrollment$year = "2020"
+
+#combine tables
+mf_prop_2020 <- rbind(total_male_biology_enrollment, total_female_biology_enrollment)
