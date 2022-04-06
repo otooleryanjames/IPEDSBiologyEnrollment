@@ -1,0 +1,76 @@
+#load packages
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(data.table)
+
+#import data
+fall_enrollment_2020 <- read_csv("C:/Users/otool/OneDrive - University of Connecticut/Desktop/school_data.csv", col_types = cols(UNITID = col_factor(levels = NULL), CIPCODE = col_factor(levels = NULL)))
+
+#find sum of biology students by school
+total_biology_enrollment_2020 <- fall_enrollment_2020 %>%
+  select(UNITID, CIPCODE, EFTOTLT) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Total = sum(EFTOTLT))
+
+#find sum of male biology students by school
+total_male_biology_enrollment_2020 <- fall_enrollment_2020 %>%
+  select(UNITID, CIPCODE, EFTOTLM) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Men = sum(EFTOTLM))
+
+#find sum of female biology students by school
+total_female_biology_enrollment_2020 <- fall_enrollment_2020 %>%
+  select(UNITID, CIPCODE, EFTOTLW) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(Women = sum(EFTOTLW))
+
+#find sum of hispanic male biology students by school
+hispanic_male_biology_2020 <- fall_enrollment_2020 %>%
+  select(UNITID, CIPCODE, EFHISPM) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(hispanic = sum(EFHISPM))
+
+#find sum of hispanic female biology students by school
+hispanic_female_biology_2020 <- fall_enrollment_2020 %>%
+  select(UNITID, CIPCODE, EFHISPW) %>%
+  group_by(UNITID) %>%
+  filter(CIPCODE =="26") %>%
+  summarise(hispanic = sum(EFHISPW))
+
+#create male hispanic table
+total_male_by_ethnicity_2020 <- left_join(BY = UNITID, total_male_biology_enrollment_2020, hispanic_male_biology_2020)
+total_female_by_ethnicity_2020 <- left_join(BY = UNITID, total_female_biology_enrollment_2020, hispanic_female_biology_2020)
+
+#create nonhispanic column
+total_male_by_ethnicity_2020 <- total_male_by_ethnicity_2020 %>%
+  mutate(nonhispanic = Men - hispanic) %>%
+  mutate(gender = "male") %>%
+  select(-Men)
+total_female_by_ethnicity_2020 <- total_female_by_ethnicity_2020 %>%
+  mutate(nonhispanic = Women - hispanic) %>%
+  mutate(gender = "female") %>%
+  select(-Women)
+
+#tidy the table
+total_male_by_ethnicity_2020 <- total_male_by_ethnicity_2020 %>%
+  gather(key = "ethnicity", value = "total", hispanic:nonhispanic)
+total_female_by_ethnicity_2020 <- total_female_by_ethnicity_2020 %>%
+  gather(key = "ethnicity", value = "total", hispanic:nonhispanic)
+
+#combine male and female ethnicity tables
+total_gender_by_ethnicity_2020 <- rbind(total_male_by_ethnicity_2020, total_female_by_ethnicity_2020)
+
+#create summary table for the year
+summary_2020 <- total_gender_by_ethnicity_2020 %>%
+  group_by(gender, ethnicity) %>%
+  summarise(sum = sum(total), .groups = "drop") %>%
+  mutate(proportion = sum / sum(sum)) %>%
+  select(-sum) %>%
+  mutate(year = "2020") %>%
+  ungroup()
